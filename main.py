@@ -22,6 +22,12 @@ def find_post(id):
         if post['id'] == id:
             return post
 
+
+def find_post_index(id):
+    for i, post in enumerate(my_posts):
+        if post['id'] == id:
+            return i
+
 @app.get("/")
 @app.get("/login")
 def root():
@@ -42,10 +48,23 @@ def create_post(post: Post):
 
 
 @app.get('/posts/{id}')
-def get_post(id: int, response: Response):
+def get_post(id: int):
     
     post = find_post(id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} do not found")
 
     return {'post_detail': post}
+
+
+@app.delete('/posts/{id}')
+def delete_post(id: int):
+    index = find_post_index(id)
+    if not index:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not exist")
+    
+    my_posts.pop(index)
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+

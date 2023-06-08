@@ -60,16 +60,17 @@ def create_post(post: Post):
                     (post.title, post.content, post.published))
     new_post = cursor.fetchone()
     conn.commit()
-    
+
     return {'post': new_post}
 
 
 @app.get('/posts/{id}')
 def get_post(id: int):
+    cursor.execute(""" select * from posts where id = %s """, (str(id)))
+    post = cursor.fetchone()
     
-    post = find_post(id)
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} do not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not found")
 
     return {'post_detail': post}
 

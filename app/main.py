@@ -62,16 +62,20 @@ def get_posts(db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" SELECT * FROM POSTS """)
     # posts = cursor.fetchall()
     posts = db.query(models.Posts).all()
-    
+
     return {'data': posts}
 
 
 @app.post('/posts', status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
-    cursor.execute(""" insert into posts (title, content, published) values (%s, %s, %s) returning * """, 
-                    (post.title, post.content, post.published))
-    new_post = cursor.fetchone()
-    conn.commit()
+def create_post(post: Post,db: SessionLocal = Depends(get_db)):
+    # cursor.execute(""" insert into posts (title, content, published) values (%s, %s, %s) returning * """, 
+    #                 (post.title, post.content, post.published))
+    # new_post = cursor.fetchone()
+    # conn.commit()
+    new_post = models.Posts(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
 
     return {'post': new_post}
 

@@ -67,7 +67,7 @@ def get_posts(db: SessionLocal = Depends(get_db)):
 
 
 @app.post('/posts', status_code=status.HTTP_201_CREATED)
-def create_post(post: Post,db: SessionLocal = Depends(get_db)):
+def create_post(post: Post, db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" insert into posts (title, content, published) values (%s, %s, %s) returning * """, 
     #                 (post.title, post.content, post.published))
     # new_post = cursor.fetchone()
@@ -81,10 +81,11 @@ def create_post(post: Post,db: SessionLocal = Depends(get_db)):
 
 
 @app.get('/posts/{id}')
-def get_post(id: int):
-    cursor.execute(""" select * from posts where id = %s """, (str(id)))
-    post = cursor.fetchone()
-    
+def get_post(id: int, db: SessionLocal = Depends(get_db)):
+    # cursor.execute(""" select * from posts where id = %s """, (str(id)))
+    # post = cursor.fetchone()
+    post = db.query(models.Posts).filter(models.Posts.id==id).first()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not found")
 

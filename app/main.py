@@ -4,22 +4,19 @@ from psycopg2.extras import RealDictCursor
 
 from fastapi import Depends, FastAPI, Response, status, HTTPException
 from fastapi.params import Body
-from pydantic import BaseModel
 from typing import Optional
 from random import randrange
 from sqlalchemy.orm import session
 
 from . import models
+from .schema import PostCreate
 from .database import engine, SessionLocal, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
+
 
 while True:
     try:
@@ -50,11 +47,6 @@ def find_post_index(id):
 def root():
     return {"message": "Hello"}
 
-@app.get('/sqlalchemy')
-def test_posts(db: SessionLocal = Depends(get_db)):
-    posts = db.query(models.Posts).all()
-
-    return {'data': posts}
 
 
 @app.get("/posts")
@@ -67,7 +59,7 @@ def get_posts(db: SessionLocal = Depends(get_db)):
 
 
 @app.post('/posts', status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, db: SessionLocal = Depends(get_db)):
+def create_post(post: PostCreate, db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" insert into posts (title, content, published) values (%s, %s, %s) returning * """, 
     #                 (post.title, post.content, post.published))
     # new_post = cursor.fetchone()
@@ -109,7 +101,7 @@ def delete_post(id: int, db: SessionLocal = Depends(get_db)):
 
 
 @app.put('/posts/{id}')
-def update_post(id: int, post: Post, db: SessionLocal = Depends(get_db)):
+def update_post(id: int, post: PostCreate, db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" update posts set title = %s, content = %s, published = %s where id = %s returning * """, 
     #                 (post.title, post.content, post.published, str(id)))
     # updated_post = cursor.fetchone()

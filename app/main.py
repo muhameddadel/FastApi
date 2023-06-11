@@ -4,12 +4,12 @@ from psycopg2.extras import RealDictCursor
 
 from fastapi import Depends, FastAPI, Response, status, HTTPException
 from fastapi.params import Body
-from typing import Optional
+from typing import Optional, List
 from random import randrange
 from sqlalchemy.orm import session
 
 from . import models
-from .schema import PostCreate
+from .schema import PostCreate, PostResponse
 from .database import engine, SessionLocal, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -49,16 +49,16 @@ def root():
 
 
 
-@app.get("/posts")
+@app.get("/posts", response_model=List[PostResponse])
 def get_posts(db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" SELECT * FROM POSTS """)
     # posts = cursor.fetchall()
     posts = db.query(models.Posts).all()
 
-    return {'data': posts}
+    return posts
 
 
-@app.post('/posts', status_code=status.HTTP_201_CREATED)
+@app.post('/posts', status_code=status.HTTP_201_CREATED, response_model=PostResponse)
 def create_post(post: PostCreate, db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" insert into posts (title, content, published) values (%s, %s, %s) returning * """, 
     #                 (post.title, post.content, post.published))
@@ -69,10 +69,10 @@ def create_post(post: PostCreate, db: SessionLocal = Depends(get_db)):
     db.commit()
     db.refresh(new_post)
 
-    return {'post': new_post}
+    return new_post
 
 
-@app.get('/posts/{id}')
+@app.get('/posts/{id}', response_model=PostResponse)
 def get_post(id: int, db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" select * from posts where id = %s """, (str(id)))
     # post = cursor.fetchone()
@@ -81,7 +81,7 @@ def get_post(id: int, db: SessionLocal = Depends(get_db)):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not found")
 
-    return {'post_detail': post}
+    return post
 
 
 @app.delete('/posts/{id}')
@@ -100,7 +100,7 @@ def delete_post(id: int, db: SessionLocal = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put('/posts/{id}')
+@app.put('/posts/{id}', response_model=PostResponse)
 def update_post(id: int, post: PostCreate, db: SessionLocal = Depends(get_db)):
     # cursor.execute(""" update posts set title = %s, content = %s, published = %s where id = %s returning * """, 
     #                 (post.title, post.content, post.published, str(id)))
@@ -114,4 +114,4 @@ def update_post(id: int, post: PostCreate, db: SessionLocal = Depends(get_db)):
     updated_post.update(post.dict())
     db.commit()
 
-    return {'data': updated_post.first()}
+    return updated_post.first()

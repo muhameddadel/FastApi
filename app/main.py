@@ -9,7 +9,7 @@ from random import randrange
 from sqlalchemy.orm import session
 
 from . import models
-from .schema import PostCreate, PostResponse
+from .schema import *
 from .database import engine, SessionLocal, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -115,3 +115,13 @@ def update_post(id: int, post: PostCreate, db: SessionLocal = Depends(get_db)):
     db.commit()
 
     return updated_post.first()
+
+
+@app.post('/users', status_code=status.HTTP_201_CREATED, response_model=UserResponse)
+def create_user(user: UserCreate,db: SessionLocal = Depends(get_db)):
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user

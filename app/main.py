@@ -120,7 +120,7 @@ def update_post(id: int, post: PostCreate, db: SessionLocal = Depends(get_db)):
 
 
 @app.post('/users', status_code=status.HTTP_201_CREATED, response_model=UserResponse)
-def create_user(user: UserCreate,db: SessionLocal = Depends(get_db)):
+def create_user(user: UserCreate, db: SessionLocal = Depends(get_db)):
     hashed_password = hash(user.password)
     user.password = hashed_password
 
@@ -130,3 +130,13 @@ def create_user(user: UserCreate,db: SessionLocal = Depends(get_db)):
     db.refresh(new_user)
 
     return new_user
+
+
+@app.get('/users/{id}', response_model=UserResponse)
+def get_users(id: int, db: SessionLocal = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == id).first()
+    
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {id} not found!")
+
+    return user

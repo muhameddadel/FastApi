@@ -10,7 +10,9 @@ from sqlalchemy.orm import session
 
 from . import models
 from .schema import *
+from .utils import hash
 from .database import engine, SessionLocal, get_db
+
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -119,6 +121,9 @@ def update_post(id: int, post: PostCreate, db: SessionLocal = Depends(get_db)):
 
 @app.post('/users', status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 def create_user(user: UserCreate,db: SessionLocal = Depends(get_db)):
+    hashed_password = hash(user.password)
+    user.password = hashed_password
+
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()

@@ -27,7 +27,7 @@ def create_post(post: PostCreate, db: Session = Depends(get_db), current_user: i
     #                 (post.title, post.content, post.published))
     # new_post = cursor.fetchone()
     # conn.commit()
-    new_post = models.Posts(**post.dict())
+    new_post = models.Posts(user_id=current_user.id,**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)

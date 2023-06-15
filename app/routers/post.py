@@ -57,6 +57,9 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
     if not deleted_post.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not exist")
 
+    if deleted_post.first().user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not autherize to perform this action")
+
     deleted_post.delete()
     db.commit()
 
@@ -74,6 +77,9 @@ def update_post(id: int, post: PostCreate, db: Session = Depends(get_db), curren
     if not updated_post.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not exist")
 
+    if updated_post.first().user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not autherize to perform this action")
+    
     updated_post.update(post.dict())
     db.commit()
 

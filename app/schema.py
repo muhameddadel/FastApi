@@ -12,11 +12,21 @@ class PostCreate(PostBase):
     pass
 
 
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
 class PostResponse(PostBase):
     id: int
     created_at: datetime
     user_id: int
-    
+    user: UserResponse
+
     class Config:
         orm_mode = True
 

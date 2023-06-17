@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import Depends, Response, status, HTTPException, APIRouter
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, oauth2
@@ -12,15 +13,22 @@ from .. database import  get_db
 router = APIRouter(prefix="/posts", tags=['Posts'])
 
 
-@router.get("/", response_model=List[PostResponse])
+@router.get("/", response_model=List[PostVotesJoin])
 def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
                 limit: int = 5, skip: int = 0, search: Optional[str] = ""):
     # cursor.execute(""" SELECT * FROM POSTS """)
     # posts = cursor.fetchall()
 
-    posts = db.query(models.Posts).filter(models.Posts.title.contains(search)).limit(limit).offset(skip).all()
+    # posts = db.query(models.Posts).filter(models.Posts.title.contains(search)).limit(limit).offset(skip).all()
 
-    return posts
+    query_posts = db.query(models.Posts, func.count(models.Votes.post_id).label("votes")).join(
+        models.Votes, models.Votes.post_id == models.Posts.id, isouter=True).group_by(models.Posts.id).filter(
+            models.Posts.title.contains(search)).limit(limit).offset(skip).all()
+
+    return [{"post": post, "votes": votes} for post, votes in query_posts]
+
+
+
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostResponse)

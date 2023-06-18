@@ -45,16 +45,25 @@ def create_post(post: PostCreate, db: Session = Depends(get_db), current_user: i
     return new_post
 
 
-@router.get('/{id}', response_model=PostResponse)
+@router.get('/{id}', response_model=PostVotesJoin)
 def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute(""" select * from posts where id = %s """, (str(id)))
     # post = cursor.fetchone()
-    post = db.query(models.Posts).filter(models.Posts.id==id).first()
+    query_post = db.query(models.Posts, func.count(models.Votes.post_id).label("votes")).join(
+        models.Votes, models.Votes.post_id == models.Posts.id, isouter=True).group_by(
+            models.Posts.id).filter(models.Posts.id==id).first()
 
-    if not post:
+    if not query_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{id} dose not found")
+    
+    # print(query_post)
+    # print(query_post[0])
+    # print(query_post[1])
 
-    return post
+    post = query_post[0]
+    votes = query_post[1]
+
+    return {"post": post, "votes": votes}
 
 
 @router.delete('/{id}')

@@ -31,4 +31,3 @@ app.include_router(vote.router)
 def root():
     return {"message": "Hello"}
 
-

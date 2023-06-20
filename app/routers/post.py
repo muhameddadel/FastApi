@@ -63,7 +63,9 @@ def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends
     post = query_post[0]
     votes = query_post[1]
 
-    return {"post": post, "votes": votes}
+    post_votes_join = PostVotesJoin(post=post, votes=votes)
+    
+    return post_votes_join
 
 
 @router.delete('/{id}')

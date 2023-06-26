@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+import pytest
 from app.main import app
 from app import schema
 from sqlalchemy import create_engine
@@ -28,14 +29,22 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    # sqlalchemy
+    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=engine)
+    # alembic
+    # comand.upgrade("head")
+    # comand.downgrade("head")
+    yield TestClient(app)
 
-def test_root():
+def test_root(client):
     response = client.get('/')
     assert response.json().get("message") == "Hello"
     assert response.status_code == 200
 
-def test_create_user():
+def test_create_user(client):
     response = client.post("/users/", json={"email": "madel@gmail.com", "password": "password123"})
     
     new_user = schema.UserResponse(**response.json())
